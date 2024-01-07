@@ -1,1 +1,3 @@
 rb_client.db
+dist/*
+.build/*
