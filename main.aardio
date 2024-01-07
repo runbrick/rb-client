@@ -8,17 +8,17 @@ import web.json;
 import win.ui.menu;
 import win.clip;
 /*DSG{{*/
-mainForm = win.form(text="RB-Client(SSH记事本)";right=1055;bottom=695)
+mainForm = win.form(text="RB-Client(SSH记事本)";right=1055;bottom=695;border="thin")
 mainForm.add(
 AccountEdit={cls="edit";text="root";left=72;top=616;right=312;bottom=640;db=1;dl=1;edge=1;multiline=1;z=6};
 IpEdit={cls="edit";text="127.0.0.1";left=72;top=584;right=312;bottom=608;db=1;dl=1;edge=1;multiline=1;z=4};
 PasswordEdit={cls="edit";text="root";left=72;top=648;right=312;bottom=672;db=1;dl=1;edge=1;multiline=1;z=8};
-Portedit={cls="edit";text="22";left=368;top=584;right=440;bottom=608;db=1;dl=1;dr=1;edge=1;multiline=1;num=1;z=10};
+Portedit={cls="edit";text="22";left=368;top=584;right=440;bottom=608;db=1;dl=1;edge=1;multiline=1;num=1;z=10};
 RemarkEdit={cls="edit";text="备注";left=368;top=616;right=744;bottom=672;db=1;dl=1;dr=1;edge=1;multiline=1;z=12};
 button3={cls="button";text="保存";left=872;top=648;right=968;bottom=680;db=1;dr=1;z=13};
 groupbox={cls="groupbox";text="数据管理";left=8;top=560;right=760;bottom=688;db=1;dl=1;dr=1;edge=1;z=2};
 listview={cls="listview";left=0;top=0;right=1056;bottom=560;db=1;dl=1;dr=1;dt=1;z=1};
-plusClock={cls="plus";left=808;top=576;right=1027;bottom=636;db=1;dr=1;notify=1;z=14};
+plusClock={cls="plus";left=808;top=576;right=1024;bottom=640;db=1;dr=1;notify=1;z=14};
 static={cls="static";text="IP：";left=24;top=584;right=64;bottom=608;align="right";center=1;db=1;dl=1;transparent=1;z=3};
 static2={cls="static";text="账号：";left=24;top=616;right=64;bottom=640;align="right";center=1;db=1;dl=1;transparent=1;z=5};
 static3={cls="static";text="密码：";left=24;top=648;right=64;bottom=672;align="right";center=1;db=1;dl=1;transparent=1;z=7};
@@ -100,6 +100,12 @@ mainForm.popmenu.add('复制选中行',function(id){
 // 右键在选择的行添加菜单
 mainForm.listview.onRightClick = function(item,subItem,nmListView){
 	mainForm.popmenu.popup();//弹出菜单
+}
+
+mainForm.listview.onDoubleClick = function(item,subItem,nmListView){
+	var selResult =  mainForm.listview.items[item][subItem];	
+	win.clip.write(selResult);
+	mainForm.msgbox("复制成功");
 }
 
 mainForm.button3.oncommand = function(id,event){
