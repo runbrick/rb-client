@@ -1,0 +1,120 @@
+import win.ui;
+import win.ui.atom;
+import sqlite;
+import win.ui.grid;
+import win.ui.menu;
+import web.json;
+import win.ui.menu;
+/*DSG{{*/
+mainForm = win.form(text="RB-Client(SSH记事本)";right=1055;bottom=695)
+mainForm.add(
+AccountEdit={cls="edit";text="root";left=72;top=616;right=312;bottom=640;edge=1;multiline=1;z=6};
+IpEdit={cls="edit";text="127.0.0.1";left=72;top=584;right=312;bottom=608;edge=1;multiline=1;z=4};
+PasswordEdit={cls="edit";text="root";left=72;top=648;right=312;bottom=672;edge=1;multiline=1;z=8};
+Portedit={cls="edit";text="22";left=368;top=584;right=608;bottom=608;edge=1;multiline=1;num=1;z=10};
+Recommend={cls="static";left=648;top=568;right=928;bottom=688;color=128;transparent=1;z=14};
+RemarkEdit={cls="edit";text="备注";left=368;top=616;right=608;bottom=672;edge=1;multiline=1;z=12};
+button3={cls="button";text="保存";left=944;top=656;right=1040;bottom=688;z=13};
+groupbox={cls="groupbox";text="数据管理";left=8;top=560;right=632;bottom=688;edge=1;z=2};
+listview={cls="listview";left=0;top=0;right=1056;bottom=560;z=1};
+static={cls="static";text="IP：";left=24;top=584;right=64;bottom=608;align="right";center=1;transparent=1;z=3};
+static2={cls="static";text="账号：";left=24;top=616;right=64;bottom=640;align="right";center=1;transparent=1;z=5};
+static3={cls="static";text="密码：";left=24;top=648;right=64;bottom=672;align="right";center=1;transparent=1;z=7};
+static4={cls="static";text="端口：";left=320;top=584;right=360;bottom=608;align="right";center=1;transparent=1;z=9};
+static5={cls="static";text="备注：";left=320;top=616;right=360;bottom=640;align="right";center=1;transparent=1;z=11}
+)
+/*}}*/
+
+var atom,hwnd/*冲突窗口的句柄,该函数会自动激活此窗口*/ = mainForm.atom("CA670F6F-594C-43EA-9FC0-49E48A110607");
+if(!atom){
+	/*为窗口设置原子值可以避免一个程序重复运行多个实例*/
+	win.quitMessage();	return;
+}
+
+
+/* 
+	初始化全部内容 
+*/
+..db = sqlite("/rb_client.db");
+..grid = win.ui.grid(mainForm.listview);
+// 添加标题列
+grid.setColumns({"IP信息","端口","账号","密码","创建时间","修改时间","备注"});
+grid.setReadonlyColumns(1);
+mainForm.listview.enableDoubleBuffering();
+if( not db.existsTable("info")) {  
+	// 创建数据表
+    db.exec( "CREATE TABLE [info]( ip PRIMARY KEY,port,account,password,create_time,update_time,remark);" );
+}
+
+// 工具类
+function getResult(){
+	var result  = db.getTable("SELECT * FROM [info]");
+	grid.setTable(result);
+}
+// 初始化如果有数据就展示一次
+getResult();
+
+mainForm.popmenu = win.ui.popmenu(mainForm);
+mainForm.popmenu.add('删除',function(id){
+	var selResult =  mainForm.listview.items[mainForm.listview.selIndex];
+	db.exec("DELETE FROM ?? WHERE ip=?;",{ "info",selResult[1]} );
+	mainForm.listview.delItem( mainForm.listview.selIndex );
+	getResult();
+});
+
+mainForm.popmenu.add('编辑',function(id){
+	var selResult =  mainForm.listview.items[mainForm.listview.selIndex];
+	
+	mainForm.IpEdit.text = selResult[1];
+	mainForm.Portedit.text = selResult[2];
+	mainForm.AccountEdit.text = selResult[3];
+	mainForm.PasswordEdit.text = selResult[4];
+	mainForm.RemarkEdit.text = selResult[7];
+
+});
+
+
+
+// 右键在选择的行添加菜单
+mainForm.listview.onRightClick = function(item,subItem,nmListView){
+	mainForm.popmenu.popup();//弹出菜单
+}
+
+mainForm.button3.oncommand = function(id,event){
+	var ipText = mainForm.IpEdit.text;
+	var portText = mainForm.Portedit.text;
+	var accountText = mainForm.AccountEdit.text;
+	var passwordText = mainForm.PasswordEdit.text;
+	var RemarkText = mainForm.RemarkEdit.text;
+	var currentDate = time.now();
+	
+	
+	var paramText = {
+    		ip = ipText;
+    		port = portText;
+    		account = accountText;
+    		password = passwordText;
+    		update_time = currentDate;
+    		remark = RemarkText;
+	};
+	
+	// 查询一下数据如果 ip 存在就保存
+	var isExist = db.stepQuery("SELECT * FROM [info]",{ ip = ipText} ) 
+	if(isExist != null){
+		// 保存
+		var cmd = db.prepare("UPDATE info SET ip = @ip,port = @port,account=@account,
+		password=@password,update_time=@update_time,remark=@remark WHERE ip = @ip;");
+		cmd.step(paramText);
+	}else{
+		// 新增
+		var cmd = db.prepare("INSERT INTO [info] VALUES ( @ip,@port,@account,@password,@create_time,@update_time,@remark );")
+		paramText['create_time'] = currentDate;
+		cmd.step(paramText); 
+	}
+
+	
+	getResult();
+}
+
+mainForm.show();
+return win.loopMessage();
